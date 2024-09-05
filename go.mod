@@ -2,8 +2,6 @@ module github.com/romberli/go-mod
 
 go 1.22
 
-toolchain go1.23.0
-
 replace github.com/spf13/pflag v1.0.5 => github.com/romberli/pflag v1.0.6-alpha
 
 require (
