@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
-	"github.com/romberli/go-template-cli/pkg/message"
+	"github.com/romberli/go-mod/pkg/message"
 )
 
 // ValidateConfig validates if the configuration is valid

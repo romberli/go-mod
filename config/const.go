@@ -22,7 +22,7 @@ import (
 
 // global constant
 const (
-	DefaultCommandName = "go-template-cli"
+	DefaultCommandName = "go-mod"
 	DefaultBaseDir     = constant.CurrentDir
 	// daemon
 	DefaultDaemon  = false

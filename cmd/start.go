@@ -29,8 +29,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/romberli/go-template-cli/config"
-	"github.com/romberli/go-template-cli/pkg/message"
+	"github.com/romberli/go-mod/config"
+	"github.com/romberli/go-mod/pkg/message"
 )
 
 const startCommand = "start"

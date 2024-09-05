@@ -20,7 +20,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/romberli/go-template-cli/config"
+	"github.com/romberli/go-mod/config"
 )
 
 // versionCmd represents the version command

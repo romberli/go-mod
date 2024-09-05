@@ -27,8 +27,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/romberli/go-template-cli/config"
-	"github.com/romberli/go-template-cli/pkg/message"
+	"github.com/romberli/go-mod/config"
+	"github.com/romberli/go-mod/pkg/message"
 )
 
 const defaultConfigFileType = "yaml"
@@ -59,9 +59,9 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "go-template-cli",
-	Short: "go-template-cli",
-	Long:  `go-template-cli is a template of golang command line program`,
+	Use:   "go-mod",
+	Short: "go-mod",
+	Long:  `go-mod is a template of golang command line program`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// if no subcommand is set, it will print help information.
 		if len(args) == 0 {

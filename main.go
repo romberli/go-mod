@@ -16,7 +16,7 @@ limitations under the License.
 
 package main
 
-import "github.com/romberli/go-template-cli/cmd"
+import "github.com/romberli/go-mod/cmd"
 
 func main() {
 	cmd.Execute()
