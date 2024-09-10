@@ -25,12 +25,13 @@ const (
 	DefaultCommandName = "go-mod"
 	DefaultBaseDir     = constant.CurrentDir
 
-	DefaultModParent  = "parent"
-	DefaultModChild   = "child"
-	DefaultModAll     = "all"
-	DefaultModDir     = "./"
-	DefaultModName    = constant.EmptyString
-	DefaultModVersion = constant.EmptyString
+	DefaultModParent            = "parent"
+	DefaultModChild             = "child"
+	DefaultModAll               = "all"
+	DefaultModDir               = "./"
+	DefaultModName              = constant.EmptyString
+	DefaultModVersion           = constant.EmptyString
+	DefaultModUseCompileVersion = false
 )
 
 // configuration constant
@@ -38,7 +39,8 @@ const (
 	LogLevelKey  = "log.level"
 	LogFormatKey = "log.format"
 
-	ModDirKey     = "mod.dir"
-	ModNameKey    = "mod.name"
-	ModVersionKey = "mod.version"
+	ModDirKey               = "mod.dir"
+	ModNameKey              = "mod.name"
+	ModVersionKey           = "mod.version"
+	ModUseCompileVersionKey = "mod.useCompileVersion"
 )

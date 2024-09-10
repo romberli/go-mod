@@ -47,9 +47,10 @@ var parentCmd = &cobra.Command{
 		modDir := viper.GetString(config.ModDirKey)
 		modName := viper.GetString(config.ModNameKey)
 		modVersion := viper.GetString(config.ModVersionKey)
+		modUseCompileVersion := viper.GetBool(config.ModUseCompileVersionKey)
 
 		c := mod.NewController(modDir)
-		err = c.PrintParentChain(modName, modVersion)
+		err = c.PrintParentChain(modName, modVersion, modUseCompileVersion)
 		if err != nil {
 			fmt.Println(fmt.Sprintf(constant.LogWithStackString, message.NewMessage(
 				msgMod.ErrModParentPrintParentChain, err, modDir, modName, modVersion)))

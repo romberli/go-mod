@@ -49,6 +49,7 @@ func SetDefaultMod() {
 	viper.SetDefault(ModDirKey, DefaultModDir)
 	viper.SetDefault(ModNameKey, DefaultModName)
 	viper.SetDefault(ModVersionKey, DefaultModVersion)
+	viper.SetDefault(ModUseCompileVersionKey, DefaultModUseCompileVersion)
 }
 
 // TrimSpaceOfArg trims spaces of given argument

@@ -5,15 +5,18 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pingcap/errors"
 	"github.com/romberli/go-util/constant"
 	"github.com/romberli/go-util/linux"
+	"github.com/romberli/log"
 
 	"github.com/romberli/go-mod/config"
 )
 
 const (
 	getPackageRootPathCommand = "go env GOMODCACHE"
-	goModGraphCommandTemplate = "cd %s && go mod graph"
+	goModGraphCommand         = "go mod graph"
+	goModListCommandTemplate  = "go list -m %s"
 
 	defaultSpaceNum  = 2
 	outputPrefix     = "├ "
@@ -29,20 +32,23 @@ type Controller struct {
 
 	RootNode *Node
 	m        map[string]*Node
+
+	logger *log.Logger
 }
 
-func NewController(baseDir string) *Controller {
+func NewController(baseDir string, logger *log.Logger) *Controller {
 	if baseDir == constant.EmptyString {
 		baseDir = config.DefaultModDir
 	}
 	return &Controller{
 		baseDir: baseDir,
 		m:       make(map[string]*Node),
+		logger:  logger,
 	}
 }
 
 func NewControllerWithDefault() *Controller {
-	return NewController(config.DefaultModDir)
+	return NewController(config.DefaultModDir, nil)
 }
 
 func (c *Controller) Init() error {
@@ -60,7 +66,7 @@ func (c *Controller) Init() error {
 		return err
 	}
 
-	c.RootNode = NewNode(c.baseDir, constant.EmptyString)
+	c.RootNode = NewNode(c.baseDir, constant.EmptyString, c.logger)
 
 	return c.RootNode.Resolve(c.m)
 }
@@ -89,12 +95,21 @@ func (c *Controller) GetParentChain(name, version string) [][]*Node {
 	return result
 }
 
-func (c *Controller) PrintParentChain(name, version string) error {
+func (c *Controller) PrintParentChain(name, version string, modUseCompileVersion bool) error {
 	err := c.Init()
 	if err != nil {
 		return err
 	}
-	nodesList := c.GetParentChain(name, version)
+
+	v := version
+	if modUseCompileVersion {
+		v, err = c.GetCompileVersion(name)
+		if err != nil {
+			return err
+		}
+	}
+
+	nodesList := c.GetParentChain(name, v)
 	c.PrintNodesList(nodesList)
 
 	return nil
@@ -114,15 +129,28 @@ func (c *Controller) PrintNodesList(nodesList [][]*Node) {
 }
 
 func (c *Controller) GetGoModGraph() (string, error) {
-	cmd := fmt.Sprintf(goModGraphCommandTemplate, c.baseDir)
+	return linux.ExecuteCommand(goModGraphCommand, linux.WorkDirOption(c.baseDir))
+}
 
-	return linux.ExecuteCommand(cmd)
+func (c *Controller) GetCompileVersion(name string) (string, error) {
+	command := fmt.Sprintf(goModListCommandTemplate, name)
+	output, err := linux.ExecuteCommand(command, linux.WorkDirOption(c.baseDir))
+	if err != nil {
+		return output, err
+	}
+
+	outputList := strings.Split(strings.TrimSpace(output), constant.SpaceString)
+	if len(outputList) < constant.TwoInt {
+		return output, errors.Errorf("Controller.GetCompileVersion(): output format is not valid. output: %s", output)
+	}
+
+	return outputList[constant.OneInt], nil
 }
 
 func getPackageRootPath() (string, error) {
 	output, err := linux.ExecuteCommand(getPackageRootPathCommand)
 	if err != nil {
-		return constant.EmptyString, err
+		return output, err
 	}
 
 	return strings.TrimSpace(output), nil

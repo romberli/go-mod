@@ -41,9 +41,10 @@ var (
 	logLevel  string
 	logFormat string
 	// mod
-	modDir     string
-	modName    string
-	modVersion string
+	modDir                  string
+	modName                 string
+	modVersion              string
+	modUseCompileVersionStr string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -97,6 +98,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&modDir, "mod-dir", constant.DefaultRandomString, fmt.Sprintf("specify the mod directory(default: %s)", config.DefaultModDir))
 	rootCmd.PersistentFlags().StringVar(&modName, "mod-name", constant.DefaultRandomString, fmt.Sprintf("specify the mod name(default: %s)", config.DefaultModName))
 	rootCmd.PersistentFlags().StringVar(&modVersion, "mod-version", constant.DefaultRandomString, fmt.Sprintf("specify the mod version(default: %s)", config.DefaultModVersion))
+	rootCmd.PersistentFlags().StringVar(&modUseCompileVersionStr, "mod-use-compile-version", constant.DefaultRandomString, fmt.Sprintf("specify if use compile version(default: %t)", config.DefaultModUseCompileVersion))
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

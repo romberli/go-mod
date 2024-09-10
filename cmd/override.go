@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/romberli/go-mod/config"
-	"github.com/romberli/go-mod/pkg/message"
 )
 
 // OverrideConfigByCLI read configuration from command line interface, it will override the config file configuration
@@ -17,10 +16,10 @@ func OverrideConfigByCLI() error {
 	if err != nil {
 		return err
 	}
-	// validate configuration
-	err = config.ValidateConfig()
+	// override mod
+	err = overrideModByCLI()
 	if err != nil {
-		return message.NewMessage(message.ErrValidateConfig, err)
+		return err
 	}
 
 	return nil
@@ -37,6 +36,28 @@ func overrideLogByCLI() error {
 	if logFormat != constant.DefaultRandomString {
 		logLevel = strings.ToLower(logFormat)
 		viper.Set(config.LogFormatKey, logFormat)
+	}
+
+	return nil
+}
+
+// overrideModByCLI overrides the mod section by command line interface
+func overrideModByCLI() error {
+	// mod.dir
+	if modDir != constant.DefaultRandomString {
+		viper.Set(config.ModDirKey, modDir)
+	}
+	// mod.name
+	if modName != constant.DefaultRandomString {
+		viper.Set(config.ModNameKey, modName)
+	}
+	// mod.version
+	if modVersion != constant.DefaultRandomString {
+		viper.Set(config.ModVersionKey, modVersion)
+	}
+	// mod.useCompileVersion
+	if modUseCompileVersionStr != constant.DefaultRandomString {
+		viper.Set(config.ModUseCompileVersionKey, modUseCompileVersionStr)
 	}
 
 	return nil

@@ -33,3 +33,7 @@ mod:
   # type: string
   # default: None
   version: ""
+  # description: mod use compile version
+  # type: bool
+  # default: false
+  useCompileVersion: false

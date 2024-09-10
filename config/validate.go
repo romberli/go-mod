@@ -79,5 +79,11 @@ func ValidateMod() error {
 		merr = multierror.Append(merr, errors.Trace(err))
 	}
 
+	// validate mod.useCompileVersion
+	_, err = cast.ToBoolE(viper.Get(ModUseCompileVersionKey))
+	if err != nil {
+		merr = multierror.Append(merr, errors.Trace(err))
+	}
+
 	return merr.ErrorOrNil()
 }
