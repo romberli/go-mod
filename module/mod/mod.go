@@ -8,7 +8,6 @@ import (
 	"github.com/pingcap/errors"
 	"github.com/romberli/go-util/constant"
 	"github.com/romberli/go-util/linux"
-	"github.com/romberli/log"
 
 	"github.com/romberli/go-mod/config"
 )
@@ -32,23 +31,20 @@ type Controller struct {
 
 	RootNode *Node
 	m        map[string]*Node
-
-	logger *log.Logger
 }
 
-func NewController(baseDir string, logger *log.Logger) *Controller {
+func NewController(baseDir string) *Controller {
 	if baseDir == constant.EmptyString {
 		baseDir = config.DefaultModDir
 	}
 	return &Controller{
 		baseDir: baseDir,
 		m:       make(map[string]*Node),
-		logger:  logger,
 	}
 }
 
 func NewControllerWithDefault() *Controller {
-	return NewController(config.DefaultModDir, nil)
+	return NewController(config.DefaultModDir)
 }
 
 func (c *Controller) Init() error {
@@ -66,7 +62,7 @@ func (c *Controller) Init() error {
 		return err
 	}
 
-	c.RootNode = NewNode(c.baseDir, constant.EmptyString, c.logger)
+	c.RootNode = NewNode(c.baseDir, constant.EmptyString)
 
 	return c.RootNode.Resolve(c.m)
 }

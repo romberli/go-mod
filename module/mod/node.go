@@ -34,11 +34,9 @@ type Node struct {
 
 	ParentNodes []*Node
 	ChildNodes  []*Node
-
-	logger *log.Logger
 }
 
-func NewNode(rootPath, fullName string, logger *log.Logger) *Node {
+func NewNode(rootPath, fullName string) *Node {
 	var (
 		name    string
 		version string
@@ -58,7 +56,6 @@ func NewNode(rootPath, fullName string, logger *log.Logger) *Node {
 		FullName: fullName,
 		Name:     name,
 		Version:  version,
-		logger:   logger,
 	}
 }
 
@@ -119,7 +116,7 @@ func (n *Node) Resolve(m map[string]*Node) error {
 		}
 		childNode, ok := m[pkg]
 		if !ok {
-			childNode = NewNode(rootPath, pkg, n.logger)
+			childNode = NewNode(rootPath, pkg)
 		}
 		childNode.AddParentNode(n)
 		n.AddChildNode(childNode)
@@ -153,21 +150,15 @@ func (n *Node) getChildPackages() ([]string, error) {
 		for _, pkg := range packagesList {
 			if pkg != constant.EmptyString && !common.ElementInSlice(packages, pkg) {
 				if strings.Contains(pkg, missingGoModFile) {
-					if n.logger != nil {
-						n.logger.Warnf("package can not find appropriate go.mod, will ignore it. packageName: %s", pkg)
-					}
+					log.Warnf("package can not find appropriate go.mod, will ignore it. packageName: %s", pkg)
 					continue
 				}
 				if strings.Contains(pkg, missingGoSumFile) {
-					if n.logger != nil {
-						n.logger.Warnf("package is missing go.sum file, will ignore it. packageName: %s", pkg)
-					}
+					log.Warnf("package is missing go.sum file, will ignore it. packageName: %s", pkg)
 					continue
 				}
 				if strings.Contains(pkg, goModDownloadCommand) {
-					if n.logger != nil {
-						n.logger.Warnf("packag is not downloaded, will ignore it. packageName: %s", pkg)
-					}
+					log.Warnf("packag is not downloaded, will ignore it. packageName: %s", pkg)
 					continue
 				}
 				packages = append(packages, pkg)
@@ -192,9 +183,7 @@ func (n *Node) getModDirs() ([]string, error) {
 	output, err := linux.ExecuteCommand(cmd)
 	if err != nil {
 		if strings.Contains(output, noSuchFileOrDirectoryMessage) {
-			if n.logger != nil {
-				n.logger.Warnf("path does not exist, maybe because the package is only dependent by certain build conditions, will ignore it. path: %s", path)
-			}
+			log.Warnf("path does not exist, maybe because the package is only dependent by certain build conditions, will ignore it. path: %s", path)
 			return nil, nil
 		}
 		return nil, err
