@@ -28,10 +28,12 @@ func TestModController_All(t *testing.T) {
 func TestModController_PrintParentChain(t *testing.T) {
 	asst := assert.New(t)
 
-	err := testController.PrintParentChain(testModName, testModVersion, true)
-	asst.Nil(err, "test PrintParentChain() failed")
 	log.SetDisableEscape(true)
 	log.SetDisableDoubleQuotes(true)
+	log.SetLevel(log.ErrorLevel)
+
+	err := testController.PrintParentChain(testModName, testModVersion, true)
+	asst.Nil(err, "test PrintParentChain() failed")
 	if err != nil {
 		log.Errorf("test PrintParentChain() failed: %+v", err)
 	}
