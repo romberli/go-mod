@@ -18,7 +18,7 @@ var (
 )
 
 func init() {
-	testController = NewController(testModDir, nil)
+	testController = NewController(testModDir)
 }
 
 func TestModController_All(t *testing.T) {
