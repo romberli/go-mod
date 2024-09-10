@@ -37,24 +37,13 @@ var (
 	// config
 	baseDir string
 	cfgFile string
-	// daemon
-	daemon    bool
-	daemonStr string
 	// log
-	logFileName           string
-	logLevel              string
-	logFormat             string
-	logMaxSize            int
-	logMaxDays            int
-	logMaxBackups         int
-	logRotateOnStartupStr string
-	logStdoutStr          string
-	// server
-	serverAddr         string
-	serverPid          int
-	serverPidFile      string
-	serverReadTimeout  int
-	serverWriteTimeout int
+	logLevel  string
+	logFormat string
+	// mod
+	modDir     string
+	modName    string
+	modVersion string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -101,22 +90,13 @@ func init() {
 	// will be global for your application.
 	// config
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", constant.DefaultRandomString, "config file path")
-	// daemon
-	rootCmd.PersistentFlags().StringVar(&daemonStr, "daemon", constant.DefaultRandomString, fmt.Sprintf("whether run in background as a daemon(default: %s)", constant.FalseString))
 	// log
-	rootCmd.PersistentFlags().StringVar(&logFileName, "log-file", constant.DefaultRandomString, fmt.Sprintf("specify the log file name(default: %s)", filepath.Join(config.DefaultLogDir, log.DefaultLogFileName)))
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", constant.DefaultRandomString, fmt.Sprintf("specify the log level(default: %s)", log.DefaultLogLevel))
 	rootCmd.PersistentFlags().StringVar(&logFormat, "log-format", constant.DefaultRandomString, fmt.Sprintf("specify the log format(default: %s)", log.DefaultLogFormat))
-	rootCmd.PersistentFlags().IntVar(&logMaxSize, "log-max-size", constant.DefaultRandomInt, fmt.Sprintf("specify the log file max size(default: %d)", log.DefaultLogMaxSize))
-	rootCmd.PersistentFlags().IntVar(&logMaxDays, "log-max-days", constant.DefaultRandomInt, fmt.Sprintf("specify the log file max days(default: %d)", log.DefaultLogMaxDays))
-	rootCmd.PersistentFlags().IntVar(&logMaxBackups, "log-max-backups", constant.DefaultRandomInt, fmt.Sprintf("specify the log file max backups(default: %d)", log.DefaultLogMaxBackups))
-	rootCmd.PersistentFlags().StringVar(&logRotateOnStartupStr, "log-rotate-on-startup", constant.DefaultRandomString, fmt.Sprintf("specify if rotating the log file on startup(default: %s)", constant.FalseString))
-	rootCmd.PersistentFlags().StringVar(&logStdoutStr, "log-stdout", constant.DefaultRandomString, fmt.Sprintf("specify the log the message to stdout as well(default: %s)", constant.FalseString))
-	// server
-	rootCmd.PersistentFlags().StringVar(&serverAddr, "server-addr", constant.DefaultRandomString, fmt.Sprintf("specify the server addr(default: %s)", config.DefaultServerAddr))
-	rootCmd.PersistentFlags().StringVar(&serverPidFile, "server-pid-file", constant.DefaultRandomString, fmt.Sprintf("specify the server pid file path(default: %s)", filepath.Join(config.DefaultBaseDir, fmt.Sprintf("%s.pid", config.DefaultCommandName))))
-	rootCmd.PersistentFlags().IntVar(&serverReadTimeout, "server-read-timeout", constant.DefaultRandomInt, fmt.Sprintf("specify the read timeout in seconds of http request(default: %d)", config.DefaultServerReadTimeout))
-	rootCmd.PersistentFlags().IntVar(&serverWriteTimeout, "server-write-timeout", constant.DefaultRandomInt, fmt.Sprintf("specify the write timeout in seconds of http request(default: %d)", config.DefaultServerWriteTimeout))
+	// mod
+	rootCmd.PersistentFlags().StringVar(&modDir, "mod-dir", constant.DefaultRandomString, fmt.Sprintf("specify the mod directory(default: %s)", config.DefaultModDir))
+	rootCmd.PersistentFlags().StringVar(&modName, "mod-name", constant.DefaultRandomString, fmt.Sprintf("specify the mod name(default: %s)", config.DefaultModName))
+	rootCmd.PersistentFlags().StringVar(&modVersion, "mod-version", constant.DefaultRandomString, fmt.Sprintf("specify the mod version(default: %s)", config.DefaultModVersion))
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -146,39 +126,18 @@ func initConfig() error {
 	}
 
 	// init log
-	fileName := viper.GetString(config.LogFileNameKey)
 	level := viper.GetString(config.LogLevelKey)
 	format := viper.GetString(config.LogFormatKey)
-	maxSize := viper.GetInt(config.LogMaxSizeKey)
-	maxDays := viper.GetInt(config.LogMaxDaysKey)
-	maxBackups := viper.GetInt(config.LogMaxBackupsKey)
 
-	fileNameAbs := fileName
-	isAbs := filepath.IsAbs(fileName)
-	if !isAbs {
-		fileNameAbs, err = filepath.Abs(fileName)
-		if err != nil {
-			return message.NewMessage(message.ErrAbsoluteLogFilePath, errors.Trace(err), fileName)
-		}
-	}
-	_, _, err = log.InitFileLogger(fileNameAbs, level, format, maxSize, maxDays, maxBackups)
+	logger, zapProperties, err := log.InitStdoutLogger(level, format)
 	if err != nil {
 		return message.NewMessage(message.ErrInitLogger, err)
 	}
 
+	log.ReplaceGlobals(logger, zapProperties)
 	log.SetDisableDoubleQuotes(true)
 	log.SetDisableEscape(true)
 
-	if viper.GetBool(config.LogStdoutKey) {
-		log.AddWriteSyncer(log.NewStdoutWriteSyncer())
-	}
-
-	if viper.GetBool(config.LogRotateOnStartupKey) {
-		err = log.Rotate()
-		if err != nil {
-			return message.NewMessage(message.ErrRotateLogFile, err)
-		}
-	}
 	return nil
 }
 
@@ -229,8 +188,8 @@ Aliases:
 Examples:
 {{.Example}}{{end}}{{if .HasAvailableSubCommands}}
 
-Available Commands:{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+Available Commands:{{range .Commands}}{{if (or .IsAvailableCommand (eq .FullName "help"))}}
+  {{rpad .FullName .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 Flags:
 {{.LocalFlags.FlagUsagesWithoutDefault | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}

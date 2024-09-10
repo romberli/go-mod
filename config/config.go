@@ -18,7 +18,6 @@ package config
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/romberli/go-util/constant"
@@ -33,56 +32,23 @@ var (
 
 // SetDefaultConfig set default configuration, it is the lowest priority
 func SetDefaultConfig(baseDir string) {
-	// daemon
-	SetDefaultDaemon()
 	// log
 	SetDefaultLog(baseDir)
-	// server
-	SetDefaultServer(baseDir)
-
-	// daemon
-	viper.SetDefault(DaemonKey, DefaultDaemon)
-	// log
-	defaultLogFile := filepath.Join(baseDir, DefaultLogDir, log.DefaultLogFileName)
-	viper.SetDefault(LogFileNameKey, defaultLogFile)
-	viper.SetDefault(LogLevelKey, log.DefaultLogLevel)
-	viper.SetDefault(LogFormatKey, log.DefaultLogFormat)
-	viper.SetDefault(LogMaxSizeKey, log.DefaultLogMaxSize)
-	viper.SetDefault(LogMaxDaysKey, log.DefaultLogMaxDays)
-	viper.SetDefault(LogMaxBackupsKey, log.DefaultLogMaxBackups)
-	// server
-	viper.SetDefault(ServerAddrKey, DefaultServerAddr)
-	defaultPidFile := filepath.Join(baseDir, fmt.Sprintf("%s.pid", DefaultCommandName))
-	viper.SetDefault(ServerPidFileKey, defaultPidFile)
-	viper.SetDefault(ServerReadTimeoutKey, DefaultServerReadTimeout)
-	viper.SetDefault(ServerWriteTimeoutKey, DefaultServerWriteTimeout)
-}
-
-// SetDefaultDaemon sets the default value of daemon
-func SetDefaultDaemon() {
-	viper.SetDefault(DaemonKey, DefaultDaemon)
+	// mod
+	SetDefaultMod()
 }
 
 // SetDefaultLog sets the default value of log
 func SetDefaultLog(baseDir string) {
-	defaultLogFile := filepath.Join(baseDir, DefaultLogDir, log.DefaultLogFileName)
-	viper.SetDefault(LogFileNameKey, defaultLogFile)
 	viper.SetDefault(LogLevelKey, log.DefaultLogLevel)
 	viper.SetDefault(LogFormatKey, log.DefaultLogFormat)
-	viper.SetDefault(LogMaxSizeKey, log.DefaultLogMaxSize)
-	viper.SetDefault(LogMaxDaysKey, log.DefaultLogMaxDays)
-	viper.SetDefault(LogMaxBackupsKey, log.DefaultLogMaxBackups)
-	viper.SetDefault(LogRotateOnStartupKey, DefaultRotateOnStartup)
-	viper.SetDefault(LogStdoutKey, DefaultLogStdout)
 }
 
-// SetDefaultServer sets the default value of server
-func SetDefaultServer(baseDir string) {
-	viper.SetDefault(ServerAddrKey, DefaultServerAddr)
-	defaultPidFile := filepath.Join(baseDir, fmt.Sprintf("%s.pid", DefaultCommandName))
-	viper.SetDefault(ServerPidFileKey, defaultPidFile)
-	viper.SetDefault(ServerReadTimeoutKey, DefaultServerReadTimeout)
-	viper.SetDefault(ServerWriteTimeoutKey, DefaultServerWriteTimeout)
+// SetDefaultMod sets the default value of mod
+func SetDefaultMod() {
+	viper.SetDefault(ModDirKey, DefaultModDir)
+	viper.SetDefault(ModNameKey, DefaultModName)
+	viper.SetDefault(ModVersionKey, DefaultModVersion)
 }
 
 // TrimSpaceOfArg trims spaces of given argument

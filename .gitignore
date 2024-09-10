@@ -7,14 +7,14 @@
 ./bin/*
 *.pid
 *.test
-go-template
+go-mod
 
 # config
 .idea/
 */.idea/
 .DS_Store
 test/*.json
-config/go_template.yaml
+config/go-mod.yaml
 
 # output
 *.out
@@ -28,5 +28,5 @@ release/*
 http-client.env.json
 .vscode/
 .test
-go_template.pid
-go_template.yaml
+go-mod.pid
+go-mod.yaml

@@ -24,49 +24,21 @@ import (
 const (
 	DefaultCommandName = "go-mod"
 	DefaultBaseDir     = constant.CurrentDir
-	// daemon
-	DefaultDaemon  = false
-	DaemonArg      = "--daemon"
-	DaemonArgTrue  = "--daemon=true"
-	DaemonArgFalse = "--daemon=false"
-	// log
-	DefaultLogDir          = "./log"
-	MinLogMaxSize          = 1
-	MaxLogMaxSize          = constant.MaxInt
-	MinLogMaxDays          = 1
-	MaxLogMaxDays          = constant.MaxInt
-	MinLogMaxBackups       = 1
-	MaxLogMaxBackups       = constant.MaxInt
-	DefaultRotateOnStartup = false
-	DefaultLogStdout       = false
-	// server
-	DefaultServerAddr         = "0.0.0.0:80"
-	DefaultServerReadTimeout  = 5
-	DefaultServerWriteTimeout = 10
-	MinServerReadTimeout      = 0
-	MaxServerReadTimeout      = 60
-	MinServerWriteTimeout     = 1
-	MaxServerWriteTimeout     = 60
+
+	DefaultModParent  = "parent"
+	DefaultModChild   = "child"
+	DefaultModAll     = "all"
+	DefaultModDir     = "./"
+	DefaultModName    = constant.EmptyString
+	DefaultModVersion = constant.EmptyString
 )
 
 // configuration constant
 const (
-	// config
-	ConfKey = "config"
-	// daemon
-	DaemonKey = "daemon"
-	// log
-	LogFileNameKey        = "log.fileName"
-	LogLevelKey           = "log.level"
-	LogFormatKey          = "log.format"
-	LogMaxSizeKey         = "log.maxSize"
-	LogMaxDaysKey         = "log.maxDays"
-	LogMaxBackupsKey      = "log.maxBackups"
-	LogRotateOnStartupKey = "log.rotateOnStartup"
-	LogStdoutKey          = "log.stdout"
-	// server
-	ServerAddrKey         = "server.addr"
-	ServerPidFileKey      = "server.pidFile"
-	ServerReadTimeoutKey  = "server.readTimeout"
-	ServerWriteTimeoutKey = "server.writeTimeout"
+	LogLevelKey  = "log.level"
+	LogFormatKey = "log.format"
+
+	ModDirKey     = "mod.dir"
+	ModNameKey    = "mod.name"
+	ModVersionKey = "mod.version"
 )
