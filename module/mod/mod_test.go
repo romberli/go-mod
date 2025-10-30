@@ -9,7 +9,7 @@ import (
 
 const (
 	testModDir     = "/Users/romber/source_code/go/src/github.com/romberli/go-util"
-	testModName    = "gopkg.in/yaml.v2"
+	testModName    = "github.com/tikv/client-go/v2"
 	testModVersion = ""
 )
 
@@ -30,9 +30,9 @@ func TestModController_PrintParentChain(t *testing.T) {
 
 	log.SetDisableEscape(true)
 	log.SetDisableDoubleQuotes(true)
-	log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.WarnLevel)
 
-	err := testController.PrintParentChain(testModName, testModVersion, true)
+	err := testController.PrintParentChain(testModName, testModVersion, false)
 	asst.Nil(err, "test PrintParentChain() failed")
 	if err != nil {
 		log.Errorf("test PrintParentChain() failed: %+v", err)

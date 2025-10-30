@@ -1,10 +1,12 @@
 package mod
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strings"
 
+	"github.com/buger/jsonparser"
 	"github.com/pingcap/errors"
 	"github.com/romberli/go-util/common"
 	"github.com/romberli/go-util/constant"
@@ -16,14 +18,40 @@ import (
 const (
 	AtString = "@"
 
-	findModFilesCommandTemplate  = "find %s -type f -name go.mod"
-	getPackagesCommand           = `go list -m -f '{{if not .Indirect}}{{.Path}}@{{.Version}}{{end}}' all | sed '1d'`
+	requireJSON = "Require"
+	replaceJSON = "Replace"
+	newJSON     = "New"
+
+	findModFilesCommandTemplate = "find %s -type f -name go.mod"
+	// getPackagesCommand          = `go list -m -f '{{if and (not .Indirect) (not .Replace)}}{{.Path}}@{{.Version}}{{end}}' all | sed '1d'`
+	// getPackagesCommand           = `go mod edit -json | grep -v '"Indirect": true' | grep -A1 '"Path":' | grep -v '"Indirect":' | grep -E '(Path|Version)' | awk -F'"' 'NR%2==1{path=$4} NR%2==0{print path"@"$4}'`
+	goModEditCommand             = `go mod edit -json`
 	noSuchFileOrDirectoryMessage = "No such file or directory"
 	missingGoModFile             = "go.mod: no such file or directory"
 	missingGoSumFile             = "missing go.sum entry for go.mod file"
-
+	gg
 	goModDownloadCommand = "go mod download"
 )
+
+type PackageInfo struct {
+	Path     string
+	Version  string
+	Indirect bool
+}
+
+func (pi *PackageInfo) String() string {
+	s := pi.Path
+	if pi.Version != constant.EmptyString {
+		s += AtString + pi.Version
+	}
+
+	return s
+}
+
+type ReplaceInfo struct {
+	Old *PackageInfo
+	New *PackageInfo
+}
 
 type Node struct {
 	RootPath string
@@ -97,37 +125,42 @@ func (n *Node) getParentChain(result *[][]*Node, current []*Node) {
 }
 
 func (n *Node) Resolve(m map[string]*Node) error {
-	if n.FullName != constant.EmptyString {
-		m[n.FullName] = n
-	}
-	if n.Finished {
-		return nil
-	}
-	packages, err := n.getChildPackages()
-	if err != nil {
-		return err
-	}
+	queue := []*Node{n}
 
-	for _, pkg := range packages {
-		rootPath := n.RootPath
-		if n.FullName == constant.EmptyString {
-			// root node
-			rootPath = defaultPackageRootPath
-		}
-		childNode, ok := m[pkg]
-		if !ok {
-			childNode = NewNode(rootPath, pkg)
-		}
-		childNode.AddParentNode(n)
-		n.AddChildNode(childNode)
+	for len(queue) > 0 {
+		currentNode := queue[0]
+		queue = queue[1:]
 
-		err = childNode.Resolve(m)
+		if currentNode.FullName != constant.EmptyString {
+			m[currentNode.FullName] = currentNode
+		}
+		if currentNode.Finished {
+			continue
+		}
+
+		packages, err := currentNode.getChildPackages()
 		if err != nil {
 			return err
 		}
-	}
 
-	n.Finished = true
+		for _, pkg := range packages {
+			rootPath := currentNode.RootPath
+			if currentNode.FullName == constant.EmptyString {
+				// root node
+				rootPath = defaultPackageRootPath
+			}
+			childNode, ok := m[pkg]
+			if !ok {
+				childNode = NewNode(rootPath, pkg)
+			}
+			childNode.AddParentNode(currentNode)
+			currentNode.AddChildNode(childNode)
+
+			queue = append(queue, childNode)
+		}
+
+		currentNode.Finished = true
+	}
 
 	return nil
 }
@@ -138,32 +171,74 @@ func (n *Node) getChildPackages() ([]string, error) {
 		return nil, err
 	}
 
-	var packages []string
+	var (
+		packages        []string
+		requirePackages []*PackageInfo
+		replacePackages []*ReplaceInfo
+	)
 
 	for _, dir := range modDirs {
-		output, err := linux.ExecuteCommand(getPackagesCommand, linux.WorkDirOption(dir), linux.UseSHCOption())
+		output, err := linux.ExecuteCommand(goModEditCommand, linux.WorkDirOption(dir), linux.UseSHCOption())
 		if err != nil {
 			return nil, err
 		}
+		// require
+		data, _, _, err := jsonparser.Get(common.StringToBytes(output), requireJSON)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(data, &requirePackages)
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
+		// replace
+		data, _, _, err = jsonparser.Get(common.StringToBytes(output), replaceJSON)
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
+		err = json.Unmarshal(data, &replacePackages)
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
+	Loop:
+		for _, requirePackage := range requirePackages {
+			for _, replacePackage := range replacePackages {
+				if requirePackage.Path == replacePackage.Old.Path {
+					if strings.HasPrefix(replacePackage.New.Path, constant.DotString) ||
+						replacePackage.New.Version == constant.EmptyString {
+						log.Warnf("replace new path is a file path, will ignore this. packageName: %s, oldPath: %s, newPath: %s, newVersion: %s",
+							n.FullName, replacePackage.Old.Path, replacePackage.New.Path, replacePackage.New.Version)
+						continue Loop
+					}
+					requirePackage.Path = replacePackage.New.Path
+					requirePackage.Version = replacePackage.New.Version
+					break
+				}
+			}
 
-		packagesList := strings.Split(strings.TrimSpace(output), constant.CRLFString)
-		for _, pkg := range packagesList {
-			if pkg != constant.EmptyString && !common.ElementInSlice(packages, pkg) {
-				if strings.Contains(pkg, missingGoModFile) {
-					log.Warnf("package can not find appropriate go.mod, will ignore it. packageName: %s", pkg)
-					continue
-				}
-				if strings.Contains(pkg, missingGoSumFile) {
-					log.Warnf("package is missing go.sum file, will ignore it. packageName: %s", pkg)
-					continue
-				}
-				if strings.Contains(pkg, goModDownloadCommand) {
-					log.Warnf("packag is not downloaded, will ignore it. packageName: %s", pkg)
-					continue
-				}
-				packages = append(packages, pkg)
+			if !requirePackage.Indirect {
+				packages = append(packages, requirePackage.String())
 			}
 		}
+
+		// packagesList := strings.Split(strings.TrimSpace(output), constant.CRLFString)
+		// for _, pkg := range packageList {
+		// 	if pkg != constant.EmptyString && !common.ElementInSlice(packages, pkg) {
+		// 		if strings.Contains(pkg, missingGoModFile) {
+		// 			log.Warnf("package can not find appropriate go.mod, will ignore it. packageName: %s", pkg)
+		// 			continue
+		// 		}
+		// 		if strings.Contains(pkg, missingGoSumFile) {
+		// 			log.Warnf("package is missing go.sum file, will ignore it. packageName: %s", pkg)
+		// 			continue
+		// 		}
+		// 		if strings.Contains(pkg, goModDownloadCommand) {
+		// 			log.Warnf("packag is not downloaded, will ignore it. packageName: %s", pkg)
+		// 			continue
+		// 		}
+		// 		packages = append(packages, pkg)
+		// 	}
+		// }
 	}
 
 	return packages, nil
